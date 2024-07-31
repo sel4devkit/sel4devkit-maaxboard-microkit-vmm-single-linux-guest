@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<system>
+    <!-- Primary -->
+    <memory_region name="ethernet" size="0x10000" phys_addr="0x30be0000" />
+    <memory_region name="gic_vcpu" size="0x1000" phys_addr="0x31020000" />
+    <memory_region name="guest_ram" size="0xF000000" page_size="0x200000" />
+    <memory_region name="uart" size="0x10000" phys_addr="0x30860000" />
+
+    <!-- Secondary -->
+    <memory_region name="clock_controller" size="0x10000" phys_addr="0x30380000" />
+    <memory_region name="efuse" size="0x10000" phys_addr="0x30350000" />
+    <memory_region name="gpc" size="0x10000" phys_addr="0x303a0000" />
+    <memory_region name="gpio" size="0x50000" phys_addr="0x30200000" />
+    <memory_region name="irqsteer" size="0x1000" phys_addr="0x32e2d000" />
+    <memory_region name="pinctrl" size="0x10000" phys_addr="0x30330000" />
+    <memory_region name="syscon" size="0x10000" phys_addr="0x30360000" />
+    <memory_region name="timer" size="0x20000" phys_addr="0x306a0000" />
+
+    <protection_domain name="client_vmm_1" priority="254">
+        <program_image path="client_vmm_1.elf" />
+        <map mr="guest_ram" vaddr="0x40000000" perms="rw" setvar_vaddr="guest_ram_vaddr" />
+        <virtual_machine name="client_vmm_1" id="0">
+            <!-- Primary -->
+            <map mr="ethernet" vaddr="0x30be0000" perms="rw" cached="false" />
+            <map mr="gic_vcpu" vaddr="0x31000000" perms="rw" cached="false" />
+            <map mr="guest_ram" vaddr="0x40000000" perms="rwx" />
+            <map mr="uart" vaddr="0x30860000" perms="rw" cached="false" />
+
+            <!-- Secondary -->
+            <map mr="clock_controller" vaddr="0x30380000" perms="rw" cached="false" />
+            <map mr="efuse" vaddr="0x30350000" perms="rw" cached="false" />
+            <map mr="gpc" vaddr="0x303a0000" perms="rw" cached="false" />
+            <map mr="gpio" vaddr="0x30200000" perms="rw" cached="false" />
+            <map mr="irqsteer" vaddr="0x32e2d000" perms="rw" cached="false" />
+            <map mr="pinctrl" vaddr="0x30330000" perms="rw" cached="false" />
+            <map mr="syscon" vaddr="0x30360000" perms="rw" cached="false" />
+            <map mr="timer" vaddr="0x306a0000" perms="rw" cached="false" />
+        </virtual_machine>
+        <irq irq="58" id="1" />
+        <irq irq="152" id="2" />
+    </protection_domain>
+</system>
