@@ -5,15 +5,17 @@
 #===========================================================
 # Check
 #===========================================================
-EXP_INFO := sel4devkit-maaxboard-microkit-docker-dev-env 1 *
-CHK_PATH_FILE := /check.mk
-ifeq ($(wildcard ${CHK_PATH_FILE}),)
-    HALT := TRUE
-else
-    include ${CHK_PATH_FILE}
-endif
-ifdef HALT
-    $(error Expected Environment Not Found: ${EXP_INFO})
+ifndef FORCE
+    EXP_INFO := sel4devkit-maaxboard-microkit-docker-dev-env 1 *
+    CHK_PATH_FILE := /check.mk
+    ifeq ($(wildcard ${CHK_PATH_FILE}),)
+        HALT := TRUE
+    else
+        include ${CHK_PATH_FILE}
+    endif
+    ifdef HALT
+        $(error Expected Environment Not Found: ${EXP_INFO})
+    endif
 endif
 
 #===========================================================
@@ -34,9 +36,10 @@ DEP_MKT_PATH := ${DEP_PATH}/microkit
 #===========================================================
 .PHONY: usage
 usage: 
-	@echo "usage: make <target>"
+	@echo "usage: make <target> [FORCE=TRUE]"
 	@echo ""
 	@echo "<target> is one off:"
+	@echo "get"
 	@echo "all"
 	@echo "clean"
 
@@ -99,20 +102,24 @@ LD_OPS := \
 #-------------------------------
 # Target
 #-------------------------------
+.PHONY: get
+get: dep-get
 
+.PHONY: dep-get
+dep-get:
+	make -C ${DEP_DTS_PATH} get
+	make -C ${DEP_GST_PATH} get
+	make -C ${DEP_LVM_PATH} get
+	make -C ${DEP_MKT_PATH} get
+	
 .PHONY: all
-all: ${OUT_PATH}/program.img
+all: dep-all ${OUT_PATH}/program.img
 
-${DEP_DTS_PATH}/out/maaxboard.dts:
+.PHONY: dep-all
+dep-all: 
 	make -C ${DEP_DTS_PATH} all
-
-${DEP_GST_PATH}/out/Image ${DEP_GST_PATH}/out/rootfs.cpio.gz &:
 	make -C ${DEP_GST_PATH} all
-
-${DEP_LVM_PATH}/out/libvmm:
 	make -C ${DEP_LVM_PATH} all
-
-${DEP_MKT_PATH}/out/microkit-sdk-1.2.6:
 	make -C ${DEP_MKT_PATH} all
 
 ${TMP_PATH}:
@@ -121,7 +128,7 @@ ${TMP_PATH}:
 ${OUT_PATH}:
 	mkdir ${OUT_PATH}
 
-${OUT_PATH}/program.img: ${DEP_MKT_PATH}/out/microkit-sdk-1.2.6 ${SRC_PATH}/program.system ${TMP_PATH}/client_vmm_1.elf | ${OUT_PATH}
+${OUT_PATH}/program.img: ${MKT_PATH_FILE} ${SRC_PATH}/program.system ${TMP_PATH}/client_vmm_1.elf | ${OUT_PATH}
 	${MKT_PATH_FILE} ${SRC_PATH}/program.system --search-path ${TMP_PATH} --board ${MKT_BOARD} --config ${MKT_CONFIG} --output ${OUT_PATH}/program.img --report ${OUT_PATH}/report.txt
 
 ${TMP_PATH}/client_vmm_1.elf: ${TMP_PATH}/client_vmm.o ${TMP_PATH}/client_image_1.o ${LIBVMM_AARCH64_OBJ_PATH_FILE} ${LIBVMM_COMMON_OBJ_PATH_FILE} | ${TMP_PATH}
@@ -130,7 +137,7 @@ ${TMP_PATH}/client_vmm_1.elf: ${TMP_PATH}/client_vmm.o ${TMP_PATH}/client_image_
 ${TMP_PATH}/client_vmm.o: ${SRC_PATH}/client_vmm.c ${DEP_LVM_PATH}/out/libvmm | ${TMP_PATH}
 	${CC} ${CC_OPS} $< -o $@
 
-${TMP_PATH}/client_image_1.o: ${DEP_LVM_PATH}/out/libvmm/tools/package_guest_images.S ${DEP_GST_PATH}/out/Image ${DEP_GST_PATH}/out/rootfs.cpio.gz ${TMP_PATH}/maaxboard.dtb ${DEP_LVM_PATH}/out/libvmm | ${TMP_PATH}
+${TMP_PATH}/client_image_1.o: ${DEP_LVM_PATH}/out/libvmm/tools/package_guest_images.S ${DEP_GST_PATH}/out/Image ${DEP_GST_PATH}/out/rootfs.cpio.gz ${TMP_PATH}/maaxboard.dtb | ${TMP_PATH}
 	${CC} \
 	-c \
 	-g3 \
@@ -138,7 +145,7 @@ ${TMP_PATH}/client_image_1.o: ${DEP_LVM_PATH}/out/libvmm/tools/package_guest_ima
 	-DGUEST_KERNEL_IMAGE_PATH=\"${DEP_GST_PATH}/out/Image\" \
 	-DGUEST_DTB_IMAGE_PATH=\"${TMP_PATH}/maaxboard.dtb\" \
 	-DGUEST_INITRD_IMAGE_PATH=\"${DEP_GST_PATH}/out/rootfs.cpio.gz\" \
-	"${DEP_LVM_PATH}/out/libvmm/tools/package_guest_images.S" \
+	$< \
 	-o $@
 
 ${TMP_PATH}/maaxboard.dtb: ${DEP_DTS_PATH}/out/maaxboard.dts ${SRC_PATH}/maaxboard-overlay.dts | ${TMP_PATH}

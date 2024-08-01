@@ -27,9 +27,6 @@
 #define SERIAL_IRQ_CH 1
 #define SERIAL_IRQ 58
 
-#define ETHERNET_IRQ_CH 2
-#define ETHERNET_IRQ 152
-
 /* Data for the guest's kernel image. */
 extern char _guest_kernel_image[];
 extern char _guest_kernel_image_end[];
@@ -48,12 +45,6 @@ static void serial_ack(size_t vcpu_id, int irq, void *cookie) {
      * come across a case yet where more than this needs to be done.
      */
     microkit_irq_ack(SERIAL_IRQ_CH);
-}
-
-static void ethernet_ack(size_t vcpu_id, int irq, void *cookie) {
-    // DEBUG
-    LOG_VMM_ERR("ETHERNET microkit_irq_ack\n");
-    microkit_irq_ack(ETHERNET_IRQ_CH);
 }
 
 void init(void) {
@@ -85,27 +76,15 @@ void init(void) {
     }
     success = virq_register(GUEST_VCPU_ID, SERIAL_IRQ, &serial_ack, NULL);
     assert(success);
-    success = virq_register(GUEST_VCPU_ID, ETHERNET_IRQ, &ethernet_ack, NULL);
-    assert(success);
 
     /* Just in case there is already an interrupt available to handle, we ack it here. */
     microkit_irq_ack(SERIAL_IRQ_CH);
-    microkit_irq_ack(ETHERNET_IRQ_CH);
     /* Finally start the guest */
     guest_start(GUEST_VCPU_ID, kernel_pc, GUEST_DTB_VADDR, GUEST_INIT_RAM_DISK_VADDR);
 }
 
 void notified(microkit_channel ch) {
     switch (ch) {
-        case ETHERNET_IRQ_CH: {
-            // DEBUG
-            LOG_VMM_ERR("ETHERNET_IRQ_CH SEEN CHANNEL %d\n", ch);
-            bool success = virq_inject(GUEST_VCPU_ID, ETHERNET_IRQ);
-            if (!success) {
-                LOG_VMM_ERR("IRQ %d dropped on vCPU %d\n", ETHERNET_IRQ, GUEST_VCPU_ID);
-            }
-            break;
-        }
         case SERIAL_IRQ_CH: {
             bool success = virq_inject(GUEST_VCPU_ID, SERIAL_IRQ);
             if (!success) {

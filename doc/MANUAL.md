@@ -4,7 +4,7 @@ This Package forms part of the seL4 Developer Kit. It provides a fully
 coordinated build of a MaaXBoard Microkit program which leverages BuildRoot
 (embedded Linux build facility) and libvmm (virtual machine monitor for the
 seL4 microkernel) to provide a virtualised Linux Guest interacting with
-physical (pass-through) UART (for TTY) and Ethernet (for Network).
+physical (pass-through) UART (for TTY).
 
 # Usage
 
@@ -52,12 +52,11 @@ git add --force <Path Files>
 
 ## Pass Through
 
-Both physical UART and Ethernet are passed through to the virtualised Linux
-Guest. These are indicated as Primary in the `program.system`. The inclusion
-of these devices triggers their corresponding drivers to be loaded, which then
-seek access to further physical devices. Thus, these additional devices also
-need to be passed though. These are indicated as Secondary in the
-`program.system`.
+Physical UART is passed through to the virtualised Linux Guest. This is
+indicated as Primary in the `program.system`. The inclusion of this device
+triggers corresponding drivers to be loaded, which then seek access to further
+physical devices. Thus, these additional devices also need to be passed
+though. These are indicated as Secondary in the `program.system`.
 
 ## Build Root
 
