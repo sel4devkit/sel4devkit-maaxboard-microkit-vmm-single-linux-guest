@@ -65,6 +65,10 @@
                 status = "disabled";
             };
 
+            ethernet@30be0000 {
+                status = "disabled";
+            };
+
             i2c@30a20000 {
                 status = "disabled";
             };
