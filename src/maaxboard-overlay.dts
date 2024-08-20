@@ -73,9 +73,6 @@
                 status = "disabled";
             };
 
-            ethernet@30be0000 {
-                status = "disabled";
-            };
         };
 
         bus@30000000 {
