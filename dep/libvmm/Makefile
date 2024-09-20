@@ -40,7 +40,9 @@ usage:
 # Target
 #===========================================================
 .PHONY: get
-get: | ${OUT_PATH}
+get: | ${OUT_PATH}/libvmm
+
+${OUT_PATH}/libvmm: | ${OUT_PATH}
 	git -C ${OUT_PATH} clone --branch "main" "git@github.com:au-ts/libvmm.git" libvmm
 	git -C ${OUT_PATH}/libvmm reset --hard "34fd9c2b80366f7701fc37d3309e9fa0a1f9e658"
 	git -C ${OUT_PATH}/libvmm submodule update --init
